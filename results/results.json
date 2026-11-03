@@ -1,0 +1,375 @@
+{
+  "machine": {
+    "cpu": "AMD Ryzen 7 5825U with Radeon Graphics",
+    "os": "Windows-11-10.0.26200-SP0",
+    "onnxruntime": "1.31.0"
+  },
+  "settings": {
+    "calibration_s": 300,
+    "window_s": 10,
+    "budgets": [
+      64,
+      128,
+      256,
+      512
+    ],
+    "header_bytes": 8,
+    "sample_bytes": 16,
+    "state_bytes": 32,
+    "normal_chunk_s": 600,
+    "sensors": [
+      "Accelerometer1RMS",
+      "Accelerometer2RMS",
+      "Current",
+      "Pressure",
+      "Temperature",
+      "Thermocouple",
+      "Voltage",
+      "Volume Flow RateRMS"
+    ]
+  },
+  "data": {
+    "experiments_used": 33,
+    "experiments_total": 34,
+    "train_windows": 440,
+    "installations_replayed": 64,
+    "anomalous_periods": 33,
+    "normal_periods": 33,
+    "period_s_median": 580.0
+  },
+  "threshold_factor": {
+    "ae": 5.848,
+    "rule": 3.211
+  },
+  "methods": {
+    "last_state": {
+      "bytes_max": 32,
+      "detected": 2,
+      "anomalous": 33,
+      "detected_ended": 2,
+      "ended": 31,
+      "detected_ongoing": 0,
+      "ongoing": 2,
+      "false_alarms": 0,
+      "normal": 33,
+      "onset_error_median_s": null
+    },
+    "raw_tail_64": {
+      "bytes_max": 64,
+      "detected": 2,
+      "anomalous": 33,
+      "detected_ended": 2,
+      "ended": 31,
+      "detected_ongoing": 0,
+      "ongoing": 2,
+      "false_alarms": 0,
+      "normal": 33,
+      "onset_error_median_s": null
+    },
+    "raw_tail_128": {
+      "bytes_max": 128,
+      "detected": 1,
+      "anomalous": 33,
+      "detected_ended": 1,
+      "ended": 31,
+      "detected_ongoing": 0,
+      "ongoing": 2,
+      "false_alarms": 0,
+      "normal": 33,
+      "onset_error_median_s": null
+    },
+    "raw_tail_256": {
+      "bytes_max": 256,
+      "detected": 1,
+      "anomalous": 33,
+      "detected_ended": 1,
+      "ended": 31,
+      "detected_ongoing": 0,
+      "ongoing": 2,
+      "false_alarms": 0,
+      "normal": 33,
+      "onset_error_median_s": null
+    },
+    "raw_tail_512": {
+      "bytes_max": 512,
+      "detected": 2,
+      "anomalous": 33,
+      "detected_ended": 2,
+      "ended": 31,
+      "detected_ongoing": 0,
+      "ongoing": 2,
+      "false_alarms": 0,
+      "normal": 33,
+      "onset_error_median_s": null
+    },
+    "summary_rule_64": {
+      "bytes_max": 61,
+      "detected": 18,
+      "anomalous": 33,
+      "detected_ended": 17,
+      "ended": 31,
+      "detected_ongoing": 1,
+      "ongoing": 2,
+      "false_alarms": 2,
+      "normal": 33,
+      "onset_error_median_s": 50.0
+    },
+    "summary_rule_128": {
+      "bytes_max": 84,
+      "detected": 18,
+      "anomalous": 33,
+      "detected_ended": 17,
+      "ended": 31,
+      "detected_ongoing": 1,
+      "ongoing": 2,
+      "false_alarms": 2,
+      "normal": 33,
+      "onset_error_median_s": 50.0
+    },
+    "summary_rule_256": {
+      "bytes_max": 84,
+      "detected": 18,
+      "anomalous": 33,
+      "detected_ended": 17,
+      "ended": 31,
+      "detected_ongoing": 1,
+      "ongoing": 2,
+      "false_alarms": 2,
+      "normal": 33,
+      "onset_error_median_s": 50.0
+    },
+    "summary_rule_512": {
+      "bytes_max": 84,
+      "detected": 18,
+      "anomalous": 33,
+      "detected_ended": 17,
+      "ended": 31,
+      "detected_ongoing": 1,
+      "ongoing": 2,
+      "false_alarms": 2,
+      "normal": 33,
+      "onset_error_median_s": 50.0
+    },
+    "summary_ae_64": {
+      "bytes_max": 61,
+      "detected": 19,
+      "anomalous": 33,
+      "detected_ended": 19,
+      "ended": 31,
+      "detected_ongoing": 0,
+      "ongoing": 2,
+      "false_alarms": 2,
+      "normal": 33,
+      "onset_error_median_s": 50.0
+    },
+    "summary_ae_128": {
+      "bytes_max": 84,
+      "detected": 19,
+      "anomalous": 33,
+      "detected_ended": 19,
+      "ended": 31,
+      "detected_ongoing": 0,
+      "ongoing": 2,
+      "false_alarms": 2,
+      "normal": 33,
+      "onset_error_median_s": 50.0
+    },
+    "summary_ae_256": {
+      "bytes_max": 84,
+      "detected": 19,
+      "anomalous": 33,
+      "detected_ended": 19,
+      "ended": 31,
+      "detected_ongoing": 0,
+      "ongoing": 2,
+      "false_alarms": 2,
+      "normal": 33,
+      "onset_error_median_s": 50.0
+    },
+    "summary_ae_512": {
+      "bytes_max": 84,
+      "detected": 19,
+      "anomalous": 33,
+      "detected_ended": 19,
+      "ended": 31,
+      "detected_ongoing": 0,
+      "ongoing": 2,
+      "false_alarms": 2,
+      "normal": 33,
+      "onset_error_median_s": 50.0
+    }
+  },
+  "curve": {
+    "factors": [
+      1,
+      1.5,
+      2,
+      3,
+      4,
+      6,
+      8,
+      12,
+      16
+    ],
+    "summary_ae": [
+      {
+        "detected": 33,
+        "false_alarms": 25
+      },
+      {
+        "detected": 31,
+        "false_alarms": 11
+      },
+      {
+        "detected": 29,
+        "false_alarms": 7
+      },
+      {
+        "detected": 27,
+        "false_alarms": 3
+      },
+      {
+        "detected": 24,
+        "false_alarms": 3
+      },
+      {
+        "detected": 19,
+        "false_alarms": 2
+      },
+      {
+        "detected": 15,
+        "false_alarms": 0
+      },
+      {
+        "detected": 13,
+        "false_alarms": 0
+      },
+      {
+        "detected": 11,
+        "false_alarms": 0
+      }
+    ],
+    "summary_rule": [
+      {
+        "detected": 31,
+        "false_alarms": 24
+      },
+      {
+        "detected": 27,
+        "false_alarms": 9
+      },
+      {
+        "detected": 26,
+        "false_alarms": 4
+      },
+      {
+        "detected": 18,
+        "false_alarms": 2
+      },
+      {
+        "detected": 16,
+        "false_alarms": 1
+      },
+      {
+        "detected": 11,
+        "false_alarms": 0
+      },
+      {
+        "detected": 9,
+        "false_alarms": 0
+      },
+      {
+        "detected": 7,
+        "false_alarms": 0
+      },
+      {
+        "detected": 6,
+        "false_alarms": 0
+      }
+    ],
+    "last_state": [
+      {
+        "detected": 16,
+        "false_alarms": 11
+      },
+      {
+        "detected": 9,
+        "false_alarms": 3
+      },
+      {
+        "detected": 7,
+        "false_alarms": 1
+      },
+      {
+        "detected": 3,
+        "false_alarms": 1
+      },
+      {
+        "detected": 2,
+        "false_alarms": 1
+      },
+      {
+        "detected": 2,
+        "false_alarms": 0
+      },
+      {
+        "detected": 1,
+        "false_alarms": 0
+      },
+      {
+        "detected": 1,
+        "false_alarms": 0
+      },
+      {
+        "detected": 1,
+        "false_alarms": 0
+      }
+    ]
+  },
+  "fa_target": 0.1,
+  "top_sensor": {
+    "other": {
+      "débit": 1,
+      "thermocouple": 1,
+      "vibration 1": 5
+    },
+    "valve1": {
+      "vibration 2": 2,
+      "débit": 8
+    },
+    "valve2": {
+      "débit": 2
+    }
+  },
+  "seconds_per_block": {
+    "64": {
+      "1 heure": 70,
+      "1 jour": 1550,
+      "1 semaine": 10800
+    },
+    "128": {
+      "1 heure": 30,
+      "1 jour": 720,
+      "1 semaine": 5040
+    },
+    "256": {
+      "1 heure": 20,
+      "1 jour": 350,
+      "1 semaine": 2440
+    },
+    "512": {
+      "1 heure": 10,
+      "1 jour": 180,
+      "1 semaine": 1200
+    }
+  },
+  "cost": {
+    "fp32_us": 12.8,
+    "int8_us": 17.3,
+    "parameters": 356,
+    "macs": 320,
+    "fp32_bytes": 2263,
+    "int8_bytes": 5820,
+    "int8_fp32_window_agreement": 1.0
+  }
+}

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ce qu'une machine doit retenir entre deux passages de téléphone · Nobel Djessou</title>
+<style>
+  :root { --bg: #ffffff; --surface: #f4f7fa; --line: #e3e8ee; --fg: #333333; --title: #141414; --muted: #5f6b76;
+          --accent: #0077b1; --soft: #7fc9fa; --rule: #999999; --last: #c8102e; --band: rgba(200, 16, 46, .12); }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 24px 20px 64px; }
+  .notice { background: var(--surface); color: var(--muted); font-size: 14px; padding: 8px 20px; text-align: center; border-bottom: 1px solid var(--line); }
+  h1 { color: var(--title); font-size: clamp(28px, 5vw, 40px); line-height: 1.15; margin: 32px 0 8px; }
+  h2 { color: var(--title); font-size: 22px; margin: 48px 0 12px; }
+  .lead { font-size: 18px; color: var(--muted); }
+  a { color: var(--accent); }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
+  .kpis div { background: var(--surface); border-radius: 8px; padding: 12px 14px; border-top: 4px solid var(--line); }
+  .kpis div.win { border-top-color: var(--accent); }
+  .kpis b { display: block; font-size: 24px; color: var(--title); font-variant-numeric: tabular-nums; }
+  .kpis span { font-size: 14px; color: var(--muted); }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; font-variant-numeric: tabular-nums; margin: 8px 0 16px; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+  th { color: var(--muted); font-weight: 500; white-space: normal; vertical-align: bottom; }
+  td.num, th.num { text-align: right; }
+  .muted { color: var(--muted); font-size: 14px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+  select { font: inherit; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--fg); max-width: 100%; }
+  svg { width: 100%; height: auto; background: var(--surface); border-radius: 8px; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+  .legend span::before { content: ""; display: inline-block; width: 16px; height: 3px; margin-right: 6px; vertical-align: middle; background: var(--c); }
+  .reads { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin: 12px 0; }
+  .reads div { border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+  .reads b { display: block; }
+  .ok { color: #1d7a3a; } .ko { color: var(--last); }
+  ul.limits li { margin-bottom: 6px; }
+  footer { margin-top: 56px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); padding-top: 16px; }
+</style>
+</head>
+<body>
+<div class="notice">Projet personnel. Données publiques (banc de pompe SKAB) ; aucun matériel testé.</div>
+<main>
+  <h1>Ce qu'une machine doit retenir entre deux passages de téléphone</h1>
+  <p class="lead">Une machine sans connexion permanente est lue sur place : un technicien approche son téléphone, lit quelques variables
+    du microcontrôleur et repart. Si une anomalie est apparue puis repartie entre-temps, que faut-il avoir gardé, dans quelques
+    centaines d'octets, pour que le téléphone le sache ?</p>
+
+  <h2>Anomalies vues au passage du téléphone</h2>
+  <p class="muted" id="kpi-note"></p>
+  <div class="kpis" id="kpis"></div>
+
+  <h2>Rejouer une expérience</h2>
+  <div class="controls"><label for="exp">Expérience :</label><select id="exp"></select></div>
+  <div class="legend">
+    <span style="--c: var(--accent)">score de l'auto-encodeur, toutes les 10 s</span>
+    <span style="--c: var(--last)">seuil de cette machine</span>
+    <span style="--c: var(--band)">anomalie réelle</span>
+    <span style="--c: var(--title)">passages du téléphone</span>
+  </div>
+  <svg id="chart" viewBox="0 0 900 300" role="img" aria-label="Score d'anomalie au fil de l'expérience"></svg>
+  <p class="muted">Les 5 premières minutes servent de calibration. Échelle logarithmique.</p>
+  <div class="reads" id="reads"></div>
+
+  <h2>Le compromis détections / fausses alarmes</h2>
+  <p class="muted" id="curve-note"></p>
+  <svg id="curve" viewBox="0 0 900 340" role="img" aria-label="Anomalies vues selon les fausses alarmes"></svg>
+  <div class="legend">
+    <span style="--c: var(--accent)">résumé, auto-encodeur INT8</span>
+    <span style="--c: var(--rule)">résumé, règle simple</span>
+    <span style="--c: var(--last)">dernier état</span>
+  </div>
+
+  <h2>Tous les résultats</h2>
+  <div class="table-wrap"><table id="table"></table></div>
+  <p class="muted" id="top"></p>
+
+  <h2>Et si on passe moins souvent ?</h2>
+  <p class="muted">Le résumé ne dépasse jamais son budget : quand la période s'allonge, chaque octet couvre plus de temps.</p>
+  <div class="table-wrap"><table id="long"></table></div>
+
+  <h2>Coût sur la cible</h2>
+  <p id="cost"></p>
+
+  <h2>Limites</h2>
+  <ul class="limits">
+    <li>Les expériences durent une vingtaine de minutes : le budget d'octets ne contraint pas le résumé. Les périodes longues sont calculées, pas testées.</li>
+    <li>Un seul banc de pompe et une trentaine d'anomalies : le nombre d'anomalies vues dépend beaucoup du seuil choisi (voir le compromis).</li>
+    <li>Une expérience est écartée, parce que son anomalie commence pendant la calibration.</li>
+    <li>Aucune puce NFC, aucun module radio ni microcontrôleur testés ; coût mesuré sur un processeur de PC.</li>
+    <li>Les périodes normales ne durent que quelques minutes : les fausses alarmes sont sous-estimées pour un passage par jour.</li>
+  </ul>
+
+  <footer>
+    Code, mesures et méthode : <a href="https://github.com/profirst30/tap-memory">github.com/profirst30/tap-memory</a>.
+    Données : Skoltech Anomaly Benchmark (SKAB), licence GPL-3.0.<br>
+    Nobel Djessou · <a href="https://www.linkedin.com/in/nobel-djessou/">LinkedIn</a> · <a href="https://github.com/profirst30">GitHub</a>
+  </footer>
+</main>
+<script>
+const fr = (x, d = 1) => x == null ? "–" : Number(x).toLocaleString("fr-FR", { maximumFractionDigits: d });
+const LABEL = { last_state: "Dernier état (10 dernières secondes)", raw_tail: "Dernières mesures brutes",
+                summary_rule: "Résumé, règle simple", summary_ae: "Résumé, auto-encodeur INT8" };
+const kindOf = k => k === "last_state" ? k : k.replace(/_\d+$/, "");
+Promise.all([fetch("results.json").then(r => r.json()), fetch("series.json").then(r => r.json())]).then(([R, S]) => {
+  const M = R.methods, D = R.data;
+  document.getElementById("kpi-note").textContent =
+    `${D.anomalous_periods} anomalies sur un banc de pompe ; au passage du téléphone, la plupart sont déjà terminées. Fausses alarmes comptées sur ${D.normal_periods} périodes normales.`;
+  const pick = ["last_state", "raw_tail_512", "summary_rule_512", "summary_ae_512"];
+  document.getElementById("kpis").innerHTML = pick.map(k => { const r = M[k];
+    return `<div class="${k === "summary_ae_512" ? "win" : ""}"><b>${r.detected} sur ${r.anomalous}</b><span>${LABEL[kindOf(k)]}<br>${r.bytes_max} octets lus · ${r.false_alarms} fausse${r.false_alarms > 1 ? "s" : ""} alarme${r.false_alarms > 1 ? "s" : ""}</span></div>`; }).join("");
+
+  // Replay
+  const sel = document.getElementById("exp"), names = Object.keys(S.series).sort();
+  sel.innerHTML = names.map(n => `<option>${n}</option>`).join("");
+  const def = names.find(n => { const s = S.series[n]; return s.ae.slice(s.tap).some(v => v > s.threshold) && s.label[s.label.length - 1] === 0; });
+  if (def) sel.value = def;
+  const draw = () => {
+    const s = S.series[sel.value], n = s.ae.length, W = 900, H = 300, P = { l: 48, r: 12, t: 12, b: 30 };
+    const lv = v => Math.log10(Math.max(v, 1e-4));
+    const vals = [...s.ae, s.threshold].map(lv), lo = Math.floor(Math.min(...vals)), hi = Math.ceil(Math.max(...vals));
+    const x = i => P.l + (W - P.l - P.r) * i / (n - 1), y = v => H - P.b - (H - P.t - P.b) * (lv(v) - lo) / (hi - lo);
+    let g = "";
+    let i0 = null;
+    s.label.forEach((v, i) => { if (v && i0 === null) i0 = i; if ((!v || i === n - 1) && i0 !== null) { g += `<rect x="${x(i0)}" y="${P.t}" width="${x(v ? i : i - 1) - x(i0)}" height="${H - P.t - P.b}" fill="var(--band)"/>`; i0 = null; } });
+    for (let e = lo; e <= hi; e++) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(10 ** e)}" y2="${y(10 ** e)}" stroke="#e3e8ee"/><text x="${P.l - 6}" y="${y(10 ** e) + 4}" font-size="12" text-anchor="end" fill="#5f6b76">1e${e}</text>`;
+    for (let m = 0; m * 6 < n; m += 5) g += `<text x="${x(m * 6)}" y="${H - 10}" font-size="12" fill="#5f6b76">${m} min</text>`;
+    g += `<line x1="${x(R.settings.calibration_s / 10)}" x2="${x(R.settings.calibration_s / 10)}" y1="${P.t}" y2="${H - P.b}" stroke="#999" stroke-dasharray="2 4"/>`;
+    g += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(s.threshold)}" y2="${y(s.threshold)}" stroke="var(--last)" stroke-dasharray="6 4" stroke-width="1.5"/>`;
+    g += `<path d="${s.ae.map((v, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1)).join("")}" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
+    for (const [t, lab] of [[s.tap, "1er passage"], [n - 1, "2e passage"]]) g += `<line x1="${x(t)}" x2="${x(t)}" y1="${P.t}" y2="${H - P.b}" stroke="var(--title)" stroke-width="2"/><text x="${x(t) - 4}" y="${P.t + 14}" font-size="12" text-anchor="end" fill="#141414">${lab}</text>`;
+    document.getElementById("chart").innerHTML = g;
+    const after = s.ae.slice(s.tap), lastAlarm = s.ae[n - 1] > s.threshold, sumAlarm = after.some(v => v > s.threshold);
+    const first = after.findIndex(v => v > s.threshold), count = after.filter(v => v > s.threshold).length;
+    document.getElementById("reads").innerHTML =
+      `<div><b>Au 2e passage, le dernier état dit :</b><span class="${lastAlarm ? "ok" : "ko"}">${lastAlarm ? "anomalie en cours" : "tout est normal"}</span></div>` +
+      `<div><b>Le résumé de l'auto-encodeur dit :</b><span class="${sumAlarm ? "ok" : "ko"}">${sumAlarm ? `anomalie, début ${fr(first * 10 / 60)} min après le 1er passage, ${count * 10} s en alarme` : "rien vu"}</span></div>`;
+  };
+  sel.addEventListener("change", draw);
+  draw();
+
+  // Curve
+  const C = R.curve, Wc = 900, Hc = 340, P = { l: 52, r: 16, t: 16, b: 44 };
+  const maxFa = D.normal_periods, maxDet = D.anomalous_periods;
+  const cx = v => P.l + (Wc - P.l - P.r) * v / maxFa, cy = v => Hc - P.b - (Hc - P.t - P.b) * v / maxDet;
+  let g = "";
+  for (let v = 0; v <= maxDet; v += 5) g += `<line x1="${P.l}" x2="${Wc - P.r}" y1="${cy(v)}" y2="${cy(v)}" stroke="#e3e8ee"/><text x="${P.l - 6}" y="${cy(v) + 4}" font-size="12" text-anchor="end" fill="#5f6b76">${v}</text>`;
+  for (let v = 0; v <= maxFa; v += 5) g += `<text x="${cx(v)}" y="${Hc - P.b + 18}" font-size="12" text-anchor="middle" fill="#5f6b76">${v}</text>`;
+  g += `<text x="${(Wc + P.l) / 2}" y="${Hc - 6}" font-size="13" text-anchor="middle" fill="#5f6b76">fausses alarmes (sur ${maxFa} périodes normales)</text>`;
+  g += `<text x="14" y="${(Hc - P.b + P.t) / 2}" font-size="13" text-anchor="middle" fill="#5f6b76" transform="rotate(-90 14 ${(Hc - P.b + P.t) / 2})">anomalies vues (sur ${maxDet})</text>`;
+  for (const [k, col] of [["last_state", "var(--last)"], ["summary_rule", "var(--rule)"], ["summary_ae", "var(--accent)"]]) {
+    const pts = C[k].map(c => [cx(c.false_alarms), cy(c.detected)]);
+    g += `<path d="${pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join("")}" fill="none" stroke="${col}" stroke-width="2"/>`;
+    g += pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="${col}"/>`).join("");
+  }
+  document.getElementById("curve").innerHTML = g;
+  document.getElementById("curve-note").textContent =
+    `Chaque point est un réglage du seuil (de ×${C.factors[0]} à ×${C.factors[C.factors.length - 1]} le score de calibration). Plus on monte et plus on reste à gauche, mieux c'est. Le réglage retenu (auto-encodeur ×${fr(R.threshold_factor.ae)}, règle ×${fr(R.threshold_factor.rule)}) est choisi sur l'enregistrement sans anomalie, pas sur ces périodes.`;
+
+  document.getElementById("table").innerHTML =
+    `<tr><th>ce que le téléphone lit</th><th class="num">octets</th><th class="num">anomalies vues</th><th class="num">dont finies avant le passage</th><th class="num">fausses alarmes</th><th class="num">erreur médiane sur le début</th></tr>` +
+    Object.entries(M).filter(([k]) => !/summary_.*_(128|256)$/.test(k)).map(([k, r]) =>
+      `<tr><td>${LABEL[kindOf(k)]}${k === "last_state" ? "" : ", budget " + k.match(/\d+$/)[0] + " o"}</td><td class="num">${r.bytes_max}</td><td class="num">${r.detected} sur ${r.anomalous}</td>
+       <td class="num">${r.detected_ended} sur ${r.ended}</td><td class="num">${r.false_alarms} sur ${r.normal}</td><td class="num">${r.onset_error_median_s == null ? "–" : fr(r.onset_error_median_s, 0) + " s"}</td></tr>`).join("");
+  document.getElementById("top").textContent = "Capteur le plus en cause selon le résumé : " +
+    Object.entries(R.top_sensor).map(([g, c]) => `${g} → ` + Object.entries(c).sort((a, b) => b[1] - a[1]).map(([s, v]) => `${s} (${v})`).join(", ")).join(" ; ") + ".";
+
+  const L = R.seconds_per_block, cols = Object.keys(Object.values(L)[0]);
+  const human = s => s < 120 ? `${s} s` : s < 7200 ? `${fr(s / 60, 0)} min` : `${fr(s / 3600, 1)} h`;
+  document.getElementById("long").innerHTML = `<tr><th>budget</th>${cols.map(c => `<th class="num">entre deux passages : ${c}</th>`).join("")}</tr>` +
+    Object.entries(L).map(([b, v]) => `<tr><td>${b} octets</td>${cols.map(c => `<td class="num">un octet = ${human(v[c])}</td>`).join("")}</tr>`).join("");
+
+  const c = R.cost;
+  document.getElementById("cost").textContent =
+    `Auto-encodeur de ${c.parameters} paramètres, ${c.macs} multiplications-additions toutes les 10 s. Fichier ONNX : ${fr(c.fp32_bytes, 0)} octets en FP32, ${fr(c.int8_bytes, 0)} en INT8 (les nœuds de quantification pèsent plus que les poids d'un si petit réseau). ` +
+    `Sur ${R.machine.cpu}, un thread : ${fr(c.fp32_us)} µs en FP32, ${fr(c.int8_us)} µs en INT8. INT8 et FP32 prennent la même décision sur ${fr(100 * c.int8_fp32_window_agreement, 2)} % des fenêtres.`;
+});
+</script>
+</body>
+</html>
