@@ -20,7 +20,7 @@ from . import core, model
 from .fetch import ROOT, SENSORS, experiments, normal, read
 
 RESULTS = ROOT / "results" / "results.json"
-BUDGETS = [64, 128, 256, 512]  # bytes; 512 is the user memory of the smallest dynamic NFC tag of the ST25DV family (4 Kbit)
+BUDGETS = [64, 128, 256, 512]  # bytes; 512 bytes is the user memory of a 4-Kbit dynamic NFC tag
 NORMAL_CHUNK = 600  # seconds per normal test period cut from the anomaly-free recording
 SENSOR_FR = ["vibration 1", "vibration 2", "courant", "pression", "température", "thermocouple", "tension", "débit"]
 LONG = {"1 heure": 3600, "1 jour": 86400, "1 semaine": 604800}
