@@ -196,46 +196,48 @@ def main() -> None:
     print(md(out))
 
 
-LABEL = {"last_state": "dernier état (moyenne et dispersion des 10 dernières secondes)", "raw_tail": "dernières mesures brutes",
-         "summary_rule": "résumé, règle simple (plus grand écart d'un capteur)", "summary_ae": "résumé, auto-encodeur INT8"}
+LABEL = {"last_state": "last state (mean and spread over the last 10 seconds)", "raw_tail": "latest raw readings",
+         "summary_rule": "summary, simple rule (largest deviation of one sensor)", "summary_ae": "summary, INT8 autoencoder"}
+SENSOR_EN = dict(zip(SENSOR_FR, ["vibration 1", "vibration 2", "current", "pressure", "temperature", "thermocouple", "voltage", "flow"]))
+LONG_EN = {"1 heure": "1 hour", "1 jour": "1 day", "1 semaine": "1 week"}
 
 
-def fr(x) -> str:
-    return "–" if x is None else f"{x:,}".replace(",", " ").replace(".", ",")
+def en(x) -> str:
+    return "–" if x is None else f"{x:,}"
 
 
 def md(out: dict) -> str:
     d, M = out["data"], out["methods"]
-    L = [f"{d['experiments_used']} expériences sur {d['experiments_total']} ; {d['anomalous_periods']} périodes avec anomalie "
-         f"(durée médiane {fr(round(d['period_s_median'] / 60, 1))} min) et {d['normal_periods']} périodes normales.", "",
-         "| ce que le téléphone lit | octets | anomalies vues | dont anomalie finie avant le passage | dont anomalie en cours | fausses alarmes | erreur médiane sur le début |",
+    L = [f"{d['experiments_used']} experiments out of {d['experiments_total']}; {d['anomalous_periods']} periods with an anomaly "
+         f"(median duration {en(round(d['period_s_median'] / 60, 1))} min) and {d['normal_periods']} normal periods.", "",
+         "| what the phone reads | bytes | anomalies seen | of which ended before the reading | of which ongoing | false alarms | median onset error |",
          "|---|---:|---:|---:|---:|---:|---:|"]
     for k, r in M.items():
         kind = k.rsplit("_", 1)[0] if k != "last_state" else k
         if kind.startswith("summary") and not (k.endswith("_64") or k.endswith("_512")):
             continue  # for periods of about ten minutes the summary uses the same bytes at 128, 256 and 512
-        L.append(f"| {LABEL[kind]} | {r['bytes_max']} | {r['detected']} sur {r['anomalous']} | {r['detected_ended']} sur {r['ended']} | "
-                 f"{r['detected_ongoing']} sur {r['ongoing']} | {r['false_alarms']} sur {r['normal']} | "
-                 f"{fr(r['onset_error_median_s'])}{' s' if r['onset_error_median_s'] is not None else ''} |")
-    L += ["", f"Seuil de chaque machine : facteur × le plus grand score vu pendant ses {out['settings']['calibration_s'] // 60} minutes de calibration "
-          f"(auto-encodeur ×{fr(out['threshold_factor']['ae'])}, règle ×{fr(out['threshold_factor']['rule'])}). Les facteurs sont choisis sur "
-          f"{out['data']['installations_replayed']} installations rejouées dans l'enregistrement sans anomalie, pour qu'environ "
-          f"{fr(round(100 * out['fa_target']))} % d'entre elles donnent une fausse alarme dans les 10 minutes.", "",
-          "Compromis complet, en changeant le facteur (anomalies vues / fausses alarmes, sur les mêmes périodes) :", "",
-          "| facteur | " + " | ".join(str(fr(f)) for f in out["curve"]["factors"]) + " |", "|---|" + "---:|" * len(out["curve"]["factors"])]
-    for key, name in (("summary_ae", "résumé, auto-encodeur"), ("summary_rule", "résumé, règle simple"), ("last_state", "dernier état")):
+        L.append(f"| {LABEL[kind]} | {r['bytes_max']} | {r['detected']} of {r['anomalous']} | {r['detected_ended']} of {r['ended']} | "
+                 f"{r['detected_ongoing']} of {r['ongoing']} | {r['false_alarms']} of {r['normal']} | "
+                 f"{en(r['onset_error_median_s'])}{' s' if r['onset_error_median_s'] is not None else ''} |")
+    L += ["", f"Threshold of each machine: factor × the largest score seen during its {out['settings']['calibration_s'] // 60} minutes of calibration "
+          f"(autoencoder ×{en(out['threshold_factor']['ae'])}, rule ×{en(out['threshold_factor']['rule'])}). The factors are chosen on "
+          f"{out['data']['installations_replayed']} installations replayed in the anomaly-free recording, so that about "
+          f"{en(round(100 * out['fa_target']))} % of them raise a false alarm within 10 minutes.", "",
+          "Full trade-off, varying the factor (anomalies seen / false alarms, on the same periods):", "",
+          "| factor | " + " | ".join(str(en(f)) for f in out["curve"]["factors"]) + " |", "|---|" + "---:|" * len(out["curve"]["factors"])]
+    for key, name in (("summary_ae", "summary, autoencoder"), ("summary_rule", "summary, simple rule"), ("last_state", "last state")):
         L.append(f"| {name} | " + " | ".join(f"{c['detected']} / {c['false_alarms']}" for c in out["curve"][key]) + " |")
-    L += ["", "Capteur le plus en cause selon le résumé (auto-encodeur, 512 octets), par série d'expériences :", ""]
+    L += ["", "Sensor most involved according to the summary (autoencoder, 512 bytes), by experiment series:", ""]
     for g, c in out["top_sensor"].items():
-        L.append(f"- {g} : " + ", ".join(f"{k} ({v})" for k, v in sorted(c.items(), key=lambda kv: -kv[1])))
-    L += ["", "Résolution du résumé quand la période entre deux passages s'allonge (secondes couvertes par un octet) :", "",
-          "| budget | " + " | ".join(LONG) + " |", "|---:|" + "---:|" * len(LONG)]
+        L.append(f"- {g}: " + ", ".join(f"{SENSOR_EN.get(k, k)} ({v})" for k, v in sorted(c.items(), key=lambda kv: -kv[1])))
+    L += ["", "Resolution of the summary as the period between two readings gets longer (seconds covered by one byte):", "",
+          "| budget | " + " | ".join(LONG_EN[n] for n in LONG) + " |", "|---:|" + "---:|" * len(LONG)]
     for b, v in out["seconds_per_block"].items():
-        L.append(f"| {b} octets | " + " | ".join(fr(v[name]) + " s" for name in LONG) + " |")
+        L.append(f"| {b} bytes | " + " | ".join(en(v[name]) + " s" for name in LONG) + " |")
     c = out["cost"]
-    L += ["", f"Sur {out['machine']['cpu']}, un thread : une fenêtre de 10 s coûte {fr(c['fp32_us'])} µs en FP32 et {fr(c['int8_us'])} µs en INT8 "
-          f"({c['parameters']} paramètres, {c['macs']} multiplications-additions ; fichier ONNX de {fr(c['fp32_bytes'])} octets en FP32, "
-          f"{fr(c['int8_bytes'])} en INT8). INT8 et FP32 prennent la même décision sur {fr(round(100 * c['int8_fp32_window_agreement'], 2))} % des fenêtres."]
+    L += ["", f"On {out['machine']['cpu']}, one thread: a 10 s window costs {en(c['fp32_us'])} µs in FP32 and {en(c['int8_us'])} µs in INT8 "
+          f"({c['parameters']} parameters, {c['macs']} multiply-accumulates; ONNX file of {en(c['fp32_bytes'])} bytes in FP32, "
+          f"{en(c['int8_bytes'])} in INT8). INT8 and FP32 make the same decision on {en(round(100 * c['int8_fp32_window_agreement'], 2))} % of windows."]
     return "\n".join(L)
 
 
